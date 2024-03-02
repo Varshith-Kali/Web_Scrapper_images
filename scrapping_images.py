@@ -7,7 +7,7 @@ from urllib.parse import quote_plus
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Download images of animals.")
     parser.add_argument("animal", type=str, help="Name of the animal to download images for.")
-    parser.add_argument("--n", type=int, default=5, help="Number of images to download (default: 5).")
+    parser.add_argument("--n", type=int, default=None, help="Number of images to download.")
     parser.add_argument("--o", type=str, default="images", help="Folder to save downloaded images (default: 'images').")
     return parser.parse_args()
 
@@ -19,6 +19,18 @@ def search_images(animal, num_images):
     soup = BeautifulSoup(response.text, 'html.parser')
     image_tags = soup.find_all("img")
     image_urls = [tag['src'] for tag in image_tags]
+    
+    while num_images is None or len(image_urls) < num_images:
+        last_image = image_tags[-1]['src']
+        next_url = f"{url}&ijn={len(image_urls)}&start={len(image_urls)}"
+        response = requests.get(next_url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        image_tags = soup.find_all("img")
+        new_image_urls = [tag['src'] for tag in image_tags]
+        if new_image_urls[-1] == last_image:
+            break
+        image_urls.extend(new_image_urls)
+
     return image_urls[:num_images]
 
 
@@ -47,3 +59,24 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#     url = f"https://www.google.com/search?q={search_query}&tbm=isch"
+#     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+#     response = requests.get(url, headers=headers)
+#     soup = BeautifulSoup(response.text, 'html.parser')
+    
+#     # Print the HTML content to inspect the structure
+#     print(soup.prettify())
